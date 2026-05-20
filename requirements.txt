@@ -1,27 +1,8 @@
-# Data Processing
+streamlit
 pandas
-polars
 numpy
-
-# Machine Learning
-scikit-learn
 xgboost
-imblearn
+scikit-learn
 shap
-
-# API & Deployment
-fastapi
-uvicorn[standard]
-python-multipart
-joblib
-
-# Testing & MLOps
-pytest
-mlflow
-
-#additional 
-seaborn
-
-#GEN AI LIB
-ollama
-
+matplotlib
+requests
