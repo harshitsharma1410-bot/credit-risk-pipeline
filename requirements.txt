@@ -1,9 +1,8 @@
 streamlit
+xgboost
+shap==0.46.0
+scikit-learn
 pandas
 numpy
-xgboost
-scikit-learn
-shap
-matplotlib
-requests
+joblib
 groq
