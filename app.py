@@ -32,7 +32,7 @@ def load_models():
 
 xgb_model, xgb_imputer, trained_columns = load_models()
 
-xgb_model, xgb_imputer, shap_explainer, trained_columns = load_models()
+
 imputer_features = [c for c in trained_columns if c != 'loan_int_rate']
 client           = Groq(api_key=st.secrets["GROQ_API_KEY"])
 BEST_THRESHOLD   = 0.643
