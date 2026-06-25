@@ -191,16 +191,13 @@ def process_loan_application(customer_data):
     shap_explanation   = "N/A"
     top_shap_factors   = []
 
-    if has_default == 1:
-        status             = "REJECTED"
-        approved_loan_amnt = 0
-    elif income <= 0:
+    if income <= 0:
         status             = "REJECTED"
         approved_loan_amnt = 0
     else:
         if intent == "HOME":        max_multiplier = 5.0
         elif intent == "EDUCATION": max_multiplier = 3.0
-        else:                       max_multiplier = 1.0
+        else:                       max_multiplier = 2.0
 
         max_allowed_loan = income * max_multiplier
         if requested_loan > max_allowed_loan:
