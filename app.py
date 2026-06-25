@@ -156,7 +156,7 @@ def process_loan_application(customer_data):
     has_default    = input_df['cb_person_default_on_file'][0]
 
     model_input['person_age']                 = input_df['person_age']
-    model_input['person_income']              = income
+    model_input['person_income']              = income/83
     model_input['cb_person_default_on_file']  = has_default
     model_input['cb_person_cred_hist_length'] = input_df['cb_person_cred_hist_length']
 
