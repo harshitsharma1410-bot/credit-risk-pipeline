@@ -143,21 +143,7 @@ def format_inr(number):
     return "".join([r] + d)
 
 def get_local_shap_explanation(model_input_row, explainer, feature_names, top_n=3):
-    try:
-        local_shap     = explainer.shap_values(model_input_row)
-        shap_series    = pd.Series(local_shap[0], index=feature_names)
-        top_drivers    = shap_series.nlargest(top_n)
-        lines = []
-        for feat, val in top_drivers.items():
-            actual_value = model_input_row[feat].values[0]
-            direction    = "increased" if val > 0 else "decreased"
-            lines.append(
-                f"- **{feat.replace('_', ' ').title()}** = {actual_value:.2f} "
-                f"→ {direction} default risk by {abs(val):.4f} SHAP units"
-            )
-        return "\n".join(lines), list(top_drivers.items())
-    except:
-        return "SHAP explanation unavailable.", []
+    return "SHAP explanation available in local deployment.", []
 
 def process_loan_application(customer_data):
     input_df    = pd.DataFrame([customer_data])
@@ -227,7 +213,7 @@ def process_loan_application(customer_data):
             status = "APPROVED"
 
         shap_explanation, top_shap_factors = get_local_shap_explanation(
-            model_input, shap_explainer, feature_names=list(trained_columns)
+            model_input, None, feature_names=list(trained_columns)
         )
 
     display_rate      = f"{calculated_rate:.2f}%" if calculated_rate > 0 else "N/A"
