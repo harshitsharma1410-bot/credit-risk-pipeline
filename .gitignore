@@ -213,3 +213,9 @@ models/*.pkl
 models/*.joblib
 .ipynb_checkpoints/
 __pycache__/
+
+.streamlit/secrets.toml
+database.db
+venv/
+__pycache__/
+*.pyc
