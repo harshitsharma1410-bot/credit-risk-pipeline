@@ -3,7 +3,6 @@ import pandas as pd
 import numpy as np
 import joblib
 import json
-import shap
 import sqlite3
 import smtplib
 import datetime
@@ -25,12 +24,13 @@ st.set_page_config(
 # ─────────────────────────────────────────────
 @st.cache_resource
 def load_models():
-    xgb_model      = joblib.load('models/xgb_model.pkl')
-    xgb_imputer    = joblib.load('models/xgb_imputer.pkl')
-    shap_explainer = joblib.load('models/shap_explainer.pkl')
+    xgb_model   = joblib.load('models/xgb_model.pkl')
+    xgb_imputer = joblib.load('models/xgb_imputer.pkl')
     with open('models/trained_columns.json', 'r') as f:
         trained_columns = json.load(f)
-    return xgb_model, xgb_imputer, shap_explainer, trained_columns
+    return xgb_model, xgb_imputer, trained_columns
+
+xgb_model, xgb_imputer, trained_columns = load_models()
 
 xgb_model, xgb_imputer, shap_explainer, trained_columns = load_models()
 imputer_features = [c for c in trained_columns if c != 'loan_int_rate']
@@ -143,18 +143,21 @@ def format_inr(number):
     return "".join([r] + d)
 
 def get_local_shap_explanation(model_input_row, explainer, feature_names, top_n=3):
-    local_shap       = explainer.shap_values(model_input_row)
-    shap_series      = pd.Series(local_shap[0], index=feature_names)
-    top_risk_drivers = shap_series.nlargest(top_n)
-    lines = []
-    for feat, val in top_risk_drivers.items():
-        actual_value = model_input_row[feat].values[0]
-        direction    = "increased" if val > 0 else "decreased"
-        lines.append(
-            f"- **{feat.replace('_', ' ').title()}** = {actual_value:.2f} "
-            f"→ {direction} default risk by {abs(val):.4f} SHAP units"
-        )
-    return "\n".join(lines), list(top_risk_drivers.items())
+    try:
+        local_shap     = explainer.shap_values(model_input_row)
+        shap_series    = pd.Series(local_shap[0], index=feature_names)
+        top_drivers    = shap_series.nlargest(top_n)
+        lines = []
+        for feat, val in top_drivers.items():
+            actual_value = model_input_row[feat].values[0]
+            direction    = "increased" if val > 0 else "decreased"
+            lines.append(
+                f"- **{feat.replace('_', ' ').title()}** = {actual_value:.2f} "
+                f"→ {direction} default risk by {abs(val):.4f} SHAP units"
+            )
+        return "\n".join(lines), list(top_drivers.items())
+    except:
+        return "SHAP explanation unavailable.", []
 
 def process_loan_application(customer_data):
     input_df    = pd.DataFrame([customer_data])
