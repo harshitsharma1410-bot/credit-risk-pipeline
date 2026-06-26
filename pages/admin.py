@@ -4,39 +4,33 @@ import pandas as pd
 
 st.set_page_config(page_title="CreditLens — Admin", page_icon="🔍", layout="wide")
 
-# ─────────────────────────────────────────────
-# PASSWORD GATE
-# ─────────────────────────────────────────────
-if "admin_authenticated" not in st.session_state:
-    st.session_state.admin_authenticated = False
+# ── Password Gate ─────────────────────────────────────────────────────────────
+if "auth" not in st.session_state:
+    st.session_state.auth = False
 
-if not st.session_state.admin_authenticated:
+if not st.session_state.auth:
     st.title("🔐 CreditLens Admin Login")
     st.divider()
-    password = st.text_input("Enter Admin Password", type="password")
+    pw = st.text_input("Enter Admin Password", type="password")
     if st.button("Login", use_container_width=True):
-        if password == st.secrets["ADMIN_PASSWORD"]:
-            st.session_state.admin_authenticated = True
+        if pw == st.secrets["ADMIN_PASSWORD"]:
+            st.session_state.auth = True
             st.rerun()
         else:
             st.error("Incorrect password.")
     st.stop()
 
-# ─────────────────────────────────────────────
-# ADMIN DASHBOARD
-# ─────────────────────────────────────────────
+# ── Dashboard ─────────────────────────────────────────────────────────────────
 st.title("🔍 CreditLens — Admin Panel")
 st.caption("Internal view — all application decisions, SHAP explanations, and generated emails.")
 
 if st.button("🔓 Logout"):
-    st.session_state.admin_authenticated = False
+    st.session_state.auth = False
     st.rerun()
 
 st.divider()
 
-# ─────────────────────────────────────────────
-# LOAD DATA
-# ─────────────────────────────────────────────
+# ── Load Data ─────────────────────────────────────────────────────────────────
 try:
     conn = sqlite3.connect('database.db')
     df   = pd.read_sql_query("SELECT * FROM applications ORDER BY submitted_at DESC", conn)
@@ -49,98 +43,78 @@ if df.empty:
     st.info("No applications submitted yet.")
     st.stop()
 
-# ─────────────────────────────────────────────
-# SUMMARY METRICS
-# ─────────────────────────────────────────────
+# ── Metrics ───────────────────────────────────────────────────────────────────
 total    = len(df)
 approved = len(df[df['decision'] == 'APPROVED'])
 rejected = len(df[df['decision'] == 'REJECTED'])
 tailored = len(df[df['is_tailored'] == 1])
 
-col1, col2, col3, col4 = st.columns(4)
-col1.metric("Total Applications", total)
-col2.metric("Approved",           approved, delta=f"{approved/total*100:.0f}%")
-col3.metric("Rejected",           rejected, delta=f"-{rejected/total*100:.0f}%")
-col4.metric("Tailored Loans",     tailored)
+c1, c2, c3, c4 = st.columns(4)
+c1.metric("Total Applications", total)
+c2.metric("Approved", approved, delta=f"{approved/total*100:.0f}%")
+c3.metric("Rejected", rejected, delta=f"-{rejected/total*100:.0f}%")
+c4.metric("Tailored Loans", tailored)
 
 st.divider()
 
-# ─────────────────────────────────────────────
-# APPLICATION TABLE
-# ─────────────────────────────────────────────
+# ── Table ─────────────────────────────────────────────────────────────────────
 st.subheader("📋 All Applications")
 
-display_df = df[[
-    'submitted_at', 'customer_name', 'customer_email',
-    'loan_intent', 'loan_amnt', 'decision',
-    'approved_amnt', 'interest_rate', 'is_tailored'
-]].copy()
+disp = df[['submitted_at','customer_name','customer_email','loan_intent',
+           'loan_amnt','decision','approved_amnt','interest_rate','is_tailored']].copy()
 
-display_df['approved_amnt']  = display_df['approved_amnt'].apply(lambda x: f"₹{float(x):,.0f}")
-display_df['interest_rate']  = display_df['interest_rate'].apply(lambda x: f"{float(x):.2f}%")
-display_df['loan_amnt']      = display_df['loan_amnt'].apply(lambda x: f"₹{int(x):,}")
-display_df['is_tailored']    = display_df['is_tailored'].apply(lambda x: "Yes" if x else "No")
+disp['approved_amnt'] = disp['approved_amnt'].apply(lambda x: f"Rs.{float(x):,.0f}")
+disp['interest_rate'] = disp['interest_rate'].apply(lambda x: f"{float(x):.2f}%")
+disp['loan_amnt']     = disp['loan_amnt'].apply(lambda x: f"Rs.{int(x):,}")
+disp['is_tailored']   = disp['is_tailored'].apply(lambda x: "Yes" if x else "No")
 
-display_df.columns = [
-    'Submitted At', 'Name', 'Email',
-    'Purpose', 'Requested', 'Decision',
-    'Approved Amount', 'Rate', 'Tailored'
-]
+disp.columns = ['Submitted At','Name','Email','Purpose',
+                'Requested','Decision','Approved Amount','Rate','Tailored']
 
-def highlight_decision(val):
-    if val == 'APPROVED': return 'background-color: #1a4e1a; color: white'
-    if val == 'REJECTED': return 'background-color: #4e1a1a; color: white'
+def highlight(val):
+    if val == 'APPROVED': return 'background-color:#1a4e1a;color:white'
+    if val == 'REJECTED': return 'background-color:#4e1a1a;color:white'
     return ''
 
-st.dataframe(
-    display_df.style.applymap(highlight_decision, subset=['Decision']),
-    use_container_width=True,
-    hide_index=True
-)
+st.dataframe(disp.style.applymap(highlight, subset=['Decision']),
+             use_container_width=True, hide_index=True)
 
 st.divider()
 
-# ─────────────────────────────────────────────
-# INDIVIDUAL APPLICATION DETAIL
-# ─────────────────────────────────────────────
+# ── Detail View ───────────────────────────────────────────────────────────────
 st.subheader("🔍 Application Detail View")
 
-app_ids    = df['id'].tolist()
-app_labels = [
-    f"#{row['id']} — {row['customer_name']} — {row['decision']} ({row['submitted_at']})"
-    for _, row in df.iterrows()
-]
-selected = st.selectbox(
-    "Select an application to inspect",
-    options=app_ids,
-    format_func=lambda x: app_labels[app_ids.index(x)]
-)
+ids    = df['id'].tolist()
+labels = [f"#{r['id']} — {r['customer_name']} — {r['decision']} ({r['submitted_at']})"
+          for _, r in df.iterrows()]
+sel    = st.selectbox("Select an application to inspect", options=ids,
+                      format_func=lambda x: labels[ids.index(x)])
 
-row = df[df['id'] == selected].iloc[0]
+row = df[df['id'] == sel].iloc[0]
 
-col_a, col_b = st.columns(2)
-with col_a:
+ca, cb = st.columns(2)
+with ca:
     st.markdown("**Applicant Info**")
     st.write(f"- Name: {row['customer_name']}")
     st.write(f"- Email: {row['customer_email']}")
     st.write(f"- Age: {row['age']}")
-    st.write(f"- Income: ₹{int(row['income']):,}")
+    st.write(f"- Income: Rs.{int(row['income']):,}")
     st.write(f"- Home Ownership: {row['home_ownership']}")
     st.write(f"- Employment Length: {float(row['emp_length'])} yrs")
     st.write(f"- Credit History: {row['cred_hist']} yrs")
     st.write(f"- Prior Default: {'Yes' if row['prior_default'] else 'No'}")
 
-with col_b:
+with cb:
     st.markdown("**Loan & Decision**")
     st.write(f"- Purpose: {row['loan_intent']}")
-    st.write(f"- Requested: ₹{int(row['loan_amnt']):,}")
-    st.write(f"- Approved: ₹{float(row['approved_amnt']):,.0f}")
+    st.write(f"- Requested: Rs.{int(row['loan_amnt']):,}")
+    st.write(f"- Approved: Rs.{float(row['approved_amnt']):,.0f}")
     st.write(f"- Interest Rate: {float(row['interest_rate']):.2f}%")
     st.write(f"- Tailored Down: {'Yes' if row['is_tailored'] else 'No'}")
     if row['decision'] == 'APPROVED':
-        st.success("✅ Decision: APPROVED")
+        st.success("Decision: APPROVED")
     else:
-        st.error("❌ Decision: REJECTED")
+        st.error("Decision: REJECTED")
 
 st.divider()
 
