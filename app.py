@@ -55,8 +55,12 @@ def init_db():
 
 def save_application(cd, result):
     conn = sqlite3.connect('database.db')
-    conn.execute('''INSERT INTO applications VALUES
-        (NULL,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)''', (
+    conn.execute('''INSERT INTO applications 
+        (submitted_at, customer_name, customer_email, age, income,
+         home_ownership, emp_length, cred_hist, loan_intent, loan_amnt,
+         prior_default, decision, approved_amnt, interest_rate,
+         is_tailored, base_rate, shap_explanation, generated_email)
+        VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)''', (
         datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
         cd['name'], cd['email'],
         cd['person_age'], cd['person_income'],
