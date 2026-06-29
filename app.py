@@ -58,12 +58,18 @@ def save_application(cd, result):
     conn.execute('''INSERT INTO applications VALUES
         (NULL,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)''', (
         datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-        cd['name'], cd['email'], cd['person_age'], cd['person_income'],
+        cd['name'], cd['email'],
+        cd['person_age'], cd['person_income'],
         cd['person_home_ownership'], cd['person_emp_length'],
-        cd['cb_person_cred_hist_length'], cd['loan_intent'], cd['loan_amnt'],
-        cd['cb_person_default_on_file'], result['status'],
-        float(result['approved_loan_amnt']), float(result['calculated_rate']),
-        int(result['is_tailored']), float(result['base_rate']), result['shap_explanation'], result['email']))
+        cd['cb_person_cred_hist_length'], cd['loan_intent'],
+        cd['loan_amnt'], cd['cb_person_default_on_file'],
+        result['status'],
+        float(result['approved_loan_amnt']),
+        float(result['calculated_rate']),
+        int(result['is_tailored']),
+        float(result['base_rate']),
+        result['shap_explanation'],
+        result['email']))
     conn.commit()
     conn.close()
 
