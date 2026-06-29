@@ -61,15 +61,16 @@ st.divider()
 st.subheader("📋 All Applications")
 
 disp = df[['submitted_at','customer_name','customer_email','loan_intent',
-           'loan_amnt','decision','approved_amnt','interest_rate','is_tailored']].copy()
+           'loan_amnt','decision','approved_amnt','base_rate','interest_rate','is_tailored']].copy()
 
 disp['approved_amnt'] = disp['approved_amnt'].apply(lambda x: f"Rs.{float(x):,.0f}")
+disp['base_rate'] = disp['base_rate'].apply(lambda x: f"{float(x):.2f}%")
 disp['interest_rate'] = disp['interest_rate'].apply(lambda x: f"{float(x):.2f}%")
 disp['loan_amnt']     = disp['loan_amnt'].apply(lambda x: f"Rs.{int(x):,}")
 disp['is_tailored']   = disp['is_tailored'].apply(lambda x: "Yes" if x else "No")
 
 disp.columns = ['Submitted At','Name','Email','Purpose',
-                'Requested','Decision','Approved Amount','Rate','Tailored']
+                'Requested','Decision','Approved Amount','Raw Imputer Rate','Final Rate','Tailored']
 
 def highlight(val):
     if val == 'APPROVED': return 'background-color:#1a4e1a;color:white'

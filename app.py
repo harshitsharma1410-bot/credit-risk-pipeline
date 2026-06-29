@@ -47,7 +47,7 @@ def init_db():
         age INTEGER, income INTEGER, home_ownership TEXT,
         emp_length REAL, cred_hist INTEGER, loan_intent TEXT,
         loan_amnt INTEGER, prior_default INTEGER, decision TEXT,
-        approved_amnt REAL, interest_rate REAL, is_tailored INTEGER,
+        approved_amnt REAL, interest_rate REAL, is_tailored INTEGER, base_rate REAL,
         shap_explanation TEXT, generated_email TEXT)''')
     conn.commit()
     conn.close()
@@ -62,7 +62,7 @@ def save_application(cd, result):
         cd['cb_person_cred_hist_length'], cd['loan_intent'], cd['loan_amnt'],
         cd['cb_person_default_on_file'], result['status'],
         float(result['approved_loan_amnt']), float(result['calculated_rate']),
-        int(result['is_tailored']), result['shap_explanation'], result['email']))
+        int(result['is_tailored']), float(result['base_rate']), result['shap_explanation'], result['email']))
     conn.commit()
     conn.close()
 
@@ -217,10 +217,11 @@ Rules:
         "status"            : status,
         "approved_loan_amnt": app_amt,
         "calculated_rate"   : rate,
+        "base_rate"         : float(base_rate) if income > 0 else 0.0,
         "is_tailored"       : is_tailored,
         "shap_explanation"  : shap_txt,
         "email"             : email_txt,
-    }
+}
 
 # ── UI ────────────────────────────────────────────────────────────────────────
 st.title("🔍 CreditLens")
