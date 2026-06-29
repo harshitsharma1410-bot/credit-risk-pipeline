@@ -171,9 +171,9 @@ def process(cd):
         if intent == "HOME":
             rate = max(7.10,  min(10.50, base_rate))
         elif intent == "EDUCATION":
-            rate = max(4.00,  min(16.00, base_rate))
+            rate = max(8.00,  min(16.00, base_rate))
         else:
-            rate = max(10.00, min(24.00, base_rate))
+            rate = max(11.00, min(24.00, base_rate))
 
         mi['loan_int_rate'] = rate
         prob                = xgb_model.predict_proba(mi)[:, 1][0]
