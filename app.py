@@ -41,6 +41,7 @@ BEST_THRESHOLD   = 0.643
 # ── Database ──────────────────────────────────────────────────────────────────
 def init_db():
     conn = sqlite3.connect('database.db')
+    conn.execute('DROP TABLE IF EXISTS applications')
     conn.execute('''CREATE TABLE IF NOT EXISTS applications (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         submitted_at TEXT, customer_name TEXT, customer_email TEXT,
